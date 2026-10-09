@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apify Instagram Scraper - Sentimen Abu Vulkanik Tangsel</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-4 md:p-8 font-sans">
+
+    <div class="max-w-6xl mx-auto">
+        
+        <!-- HEADER -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-3">
+                <div>
+                    <span class="px-3 py-1 bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-500 text-white text-xs font-bold rounded-full uppercase tracking-wider">
+                        APIFY INSTAGRAM SCRAPER
+                    </span>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mt-2">
+                        Analisis Sentimen Abu Vulkanik Anak Krakatau
+                    </h1>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Fokus Wilayah: <span class="font-semibold text-gray-700">Tangerang Selatan (Tangsel)</span> | 
+                        Sumber Data: <span id="dataSource" class="text-purple-600 font-medium">Memuat dari Apify API...</span>
+                    </p>
+                </div>
+                <div class="text-left md:text-right bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <span class="text-xs text-gray-400 block font-medium">Total Data</span>
+                    <span id="totalItems" class="text-2xl font-bold text-gray-800">8 Items</span>
+                </div>
+            </div>
+
+            <!-- RINGKASAN STATISTIK SENTIMEN -->
+            <div class="grid grid-cols-3 gap-3 mt-5 text-center">
+                <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                    <span class="text-xs font-bold text-emerald-700 block uppercase tracking-wider">Positif</span>
+                    <span id="countPositif" class="text-2xl md:text-3xl font-bold text-emerald-800">0</span>
+                </div>
+                <div class="bg-rose-50 border border-rose-200 rounded-lg p-3">
+                    <span class="text-xs font-bold text-rose-700 block uppercase tracking-wider">Negatif</span>
+                    <span id="countNegatif" class="text-2xl md:text-3xl font-bold text-rose-800">0</span>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                    <span class="text-xs font-bold text-slate-700 block uppercase tracking-wider">Netral</span>
+                    <span id="countNetral" class="text-2xl md:text-3xl font-bold text-slate-800">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTAINER KARTU DATA -->
+        <div id="cardsContainer" class="grid md:grid-cols-2 gap-4">
+            <!-- Data akan di-render di sini secara dinamis -->
+        </div>
+
+    </div>
+
+    <script>
+        // Data Fallback Wilayah Tangsel (Otomatis digunakan jika API Apify dibatasi CORS/kosong)
+        const fallbackData = [
+            {
+                username: "@seputar_pamulang",
+                tanggal: "2026-10-08",
+                teks: "Hujan abu vulkanik Anak Krakatau terasa tipis sampai area Pamulang & Serpong. Motor parkir bentar langsung penuh debu putih. Selalu pakai masker ya!",
+                sentimen: "Negatif",
+                url: "https://www.instagram.com/explore/tags/abuvulkanik/"
+            },
+            {
+                username: "@infotangsel.id",
+                tanggal: "2026-10-08",
+                teks: "Pantauan sebaran abu vulkanik Anak Krakatau di wilayah Tangerang Selatan sore ini. Warga dihimbau kurangi aktivitas di luar ruangan.",
+                sentimen: "Netral",
+                url: "https://www.instagram.com/explore/tags/abuvulkanik/"
+            },
+            {
+                username: "@kabardari_ciputat",
+                tanggal: "2026-10-07",
+                teks: "Apresiasi dan terima kasih untuk BPBD & Tim Relawan Tangsel yang sigap bagikan masker gratis di Stasiun Sudimara dan area publik.",
+                sentimen: "Positif",
+                url: "https://www.instagram.com/explore/tags/abuvulkanik/"
+            },
+            {
+                username: "@warga_bsdcity",
+                tanggal: "2026-10-07",
+                teks: "Mata perih banget naik motor lewat BSD arah Serpong. Debu vulkaniknya lumayan mengganggu penglihatan berkendara.",
+                sentimen: "Negatif",
+                url: "https://www.instagram.com/explore/tags/abuvulkanik/"
+            },
+            {
+                username: "@bintaro_news",
+                tanggal: "2026-10-06",
+                teks: "Giat penyiraman jalan protokol oleh petugas pemadam kebakaran Tangsel untuk mengurangi risiko debu abu vulkanik terhirup warga.",
+                sentimen: "Positif",
+                url: "https://www.instagram.com/explore/tags/abuvulkanik/"
+            },
+            {
+                username: "@explore_tangsel",
+                tanggal: "2026-10-06",
+                teks: "Kondisi langit Tangsel agak tertutup debu vulkanik tipis erupsi Anak Krakatau. Tetap jaga kesehatan dan pantau info resmi BMKG/PVMBG.",
+                sentimen: "Netral",
+                url: "https://www.instagram.com/explore/tags/abuvulkanik/"
+            },
+            {
+                username: "@anak_serpong",
+                tanggal: "2026-10-05",
+                teks: "Jemuran baju di luar rumah kotor lagi kena debu abu vulkanik. Tenggorokan juga mulai kerasa gatal dan batuk.",
+                sentimen: "Negatif",
+                url: "https://www.instagram.com/explore/tags/abuvulkanik/"
+            },
+            {
+                username: "@peduli.tangsel",
+                tanggal: "2026-10-05",
+                teks: "Aksi tanggap bencana komunitas pemuda Pondok Aren membagikan masker & vitamin kepada para pengendara jalan berjalan lancar.",
+                sentimen: "Positif",
+                url: "https://www.instagram.com/explore/tags/abuvulkanik/"
+            }
+        ];
+
+        // Analisis Sentimen Otomatis Berdasarkan Teks
+        function deteksiSentimen(text) {
+            const lower = text.toLowerCase();
+            if (/(terima kasih|bagus|bantu|lancar|aman|apresiasi|sigap|alhamdulillah|sukses|mantap)/i.test(lower)) {
+                return 'Positif';
+            } else if (/(perih|sakit|parah|mending|kotor|ganggu|bahaya|masker|debu|rusak|macet|batuk|ispa)/i.test(lower)) {
+                return 'Negatif';
+            }
+            return 'Netral';
+        }
+
+        // Fungsi Memuat Data dari Apify API
+        async function loadApifyData() {
+            const apiToken = "apify_api_PBSKlnhL9hJB1mFVH4qWSiFSZwMBra3CVxII";
+            const datasetId = "9j5F7wkVmCCuFh80q";
+            const endpoint = `https://api.apify.com/v2/datasets/${datasetId}/items?token=${apiToken}&limit=8`;
+
+            let finalData = [];
+
+            try {
+                const response = await fetch(endpoint);
+                if (!response.ok) throw new Error('Gagal mengambil data dari API');
+                
+                const rawData = await response.json();
+
+                if (Array.isArray(rawData) && rawData.length > 0) {
+                    finalData = rawData.slice(0, 8).map(item => {
+                        const caption = item.caption || item.text || item.firstComment || "Tidak ada teks/caption";
+                        const username = item.ownerUsername || (item.owner && item.owner.username) || "warga_tangsel";
+                        const dateStr = item.timestamp ? new Date(item.timestamp).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+                        
+                        return {
+                            username: "@" + username,
+                            tanggal: dateStr,
+                            teks: caption,
+                            sentimen: deteksiSentimen(caption),
+                            url: item.url || "https://www.instagram.com/explore/tags/abuvulkanik/"
+                        };
+                    });
+                    document.getElementById('dataSource').innerText = "Apify Dataset API (Live)";
+                } else {
+                    throw new Error('Data API kosong');
+                }
+            } catch (err) {
+                console.warn('Menggunakan fallback data:', err);
+                finalData = fallbackData;
+                document.getElementById('dataSource').innerText = "Simulasi Scraping Instagram Tangsel";
+            }
+
+            renderUI(finalData);
+        }
+
+        // Render Tampilan Dashboard UI
+        function renderUI(dataList) {
+            const container = document.getElementById('cardsContainer');
+            container.innerHTML = '';
+
+            let positif = 0, negatif = 0, netral = 0;
+
+            dataList.forEach((row, index) => {
+                if (row.sentimen === 'Positif') positif++;
+                else if (row.sentimen === 'Negatif') negatif++;
+                else netral++;
+
+                let badgeClass = 'bg-slate-100 text-slate-800 border-slate-300';
+                let borderLeft = 'border-l-slate-400';
+
+                if (row.sentimen === 'Positif') {
+                    badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                    borderLeft = 'border-l-emerald-500';
+                } else if (row.sentimen === 'Negatif') {
+                    badgeClass = 'bg-rose-100 text-rose-800 border-rose-300';
+                    borderLeft = 'border-l-rose-500';
+                }
+
+                const cardHTML = `
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 border-l-4 ${borderLeft} flex flex-col justify-between hover:shadow-md transition">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 via-rose-500 to-purple-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                                        IG
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-gray-800">${escapeHtml(row.username)}</h3>
+                                        <span class="text-[10px] text-gray-400 block">${escapeHtml(row.tanggal)}</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border ${badgeClass}">
+                                    ${escapeHtml(row.sentimen)}
+                                </span>
+                            </div>
+
+                            <p class="text-gray-600 text-sm mb-4 leading-relaxed">
+                                "${escapeHtml(row.teks)}"
+                            </p>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-3 border-t border-gray-100 text-xs">
+                            <span class="text-gray-400 font-medium">Data #${index + 1}</span>
+                            <a href="${escapeHtml(row.url)}" target="_blank" rel="noopener noreferrer" class="text-xs text-purple-600 hover:text-purple-800 font-semibold flex items-center gap-1">
+                                Lihat di Instagram &rarr;
+                            </a>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHTML;
+            });
+
+            // Update Statistik Hitungan
+            document.getElementById('countPositif').innerText = positif;
+            document.getElementById('countNegatif').innerText = negatif;
+            document.getElementById('countNetral').innerText = netral;
+            document.getElementById('totalItems').innerText = `${dataList.length} Items`;
+        }
+
+        // Helper untuk mencegah XSS
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Jalankan saat halaman dibuka
+        window.addEventListener('DOMContentLoaded', loadApifyData);
+    </script>
+</body>
+</html>
